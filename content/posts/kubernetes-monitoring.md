@@ -20,7 +20,7 @@ authors:
 
 ## 准备
 
-1. 首先需要部署 kubernetes 集群，参考[k8s deploy]({{< ref "kubespray_deploy_k8s" >}} "deply")
+1. 首先需要部署 kubernetes 集群，参考[k8s deploy]({{< ref "kubespray-deploy-k8s" >}} "deply")
 
 
 ## helm 安装 prometheus 软件栈
