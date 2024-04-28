@@ -1,5 +1,5 @@
 ---
-title: "Kubespray deploy k8s"
+title: "Kubespray 部署 kubernetes"
 date: 2024-04-28T10:06:36+08:00
 draft: false
 
@@ -15,19 +15,25 @@ authors:
 
 ---
 
-# 部署
+## 准备
 
-参考文档
-- [使用Kubespray 部署Kubernetes集群 | Sunday博客 | Sunday Blog (sundayhk.com)](https://www.sundayhk.com/post/kubespray/)
-- [使用kubespray安装kubernetes | kubernetes-notes (huweihuang.com)](https://k8s.huweihuang.com/project/setup/installer/install-k8s-by-kubespray)
+本文介绍中共使用了四台物理机, 其中一台用户部署 k8s 的机器，另外三台作为 kubernetes 的节点
 
-可参考其它方式 [easzlab/kubeasz: 使用Ansible脚本安装K8S集群](https://github.com/easzlab/kubeasz)
+|  机器   | ip  | 系统 | 用户名 | 备注
+|  ----  | ----  | --- | ---- | ---- |
+| 部署机  | 任意 | Ubuntu | linuzb | 部署k8s机器，非k8s集群节点 |
+| kube-master-100  | 172.16.0.100 | Ubutnu  | linuzb | 初始化 k8s master 节点 |
+| kube-node-117  | 172.16.0.117 | Ubutnu | linuzb | 初始化 k8s node |
+| kube-node-114  | 172.16.0.114 | Ubutnu | linuzb | 后续加入的 k8s node |
 
-## kubespray
+
+## kubespray 配置
 
 ### 自定义配置
 
 ```bash
+git clone https://github.com/kubernetes-sigs/kubespray
+cd kubespray
 # 拷贝集群清单
 cp -rfp inventory/sample inventory/mycluster
 ```
@@ -40,8 +46,8 @@ inventory.ini
 # ## different ip than the default iface
 # ## We should set etcd_member_name for etcd cluster. The node that is not a etcd member do not need to set the value, or can set the empty string value.
 [all]
-kube-master-100 ansible_ssh_host=172.16.0.100 ansible_ssh_user=lzb ip=172.16.0.100   mask=/24
-kube-node-117 ansible_ssh_host=172.16.0.117 ansible_ssh_user=lzb ip=172.16.0.117   mask=/24
+kube-master-100 ansible_ssh_host=172.16.0.100 ansible_ssh_user=linuzb ip=172.16.0.100   mask=/24
+kube-node-117 ansible_ssh_host=172.16.0.117 ansible_ssh_user=linuzb ip=172.16.0.117   mask=/24
 
 # ## configure a bastion host if your nodes are not directly reachable
 # [bastion]
@@ -104,9 +110,6 @@ inventory/mycluster/group_vars/all/containerd.yml
 containerd_registries_mirrors:
   - prefix: docker.io
     mirrors:
-      - host: https://f7ni6hqo.mirror.aliyuncs.com
-        capabilities: ["pull", "resolve"]
-        skip_verify: false
       - host: http://hub-mirror.c.163.com
         capabilities: ["pull", "resolve"]
         skip_verify: false
@@ -119,6 +122,9 @@ inventory/mycluster/group_vars/k8s_cluster/k8s-cluster.yml
 ```yaml
 ## Automatically renew K8S control plane certificates on first Monday of each month
 auto_renew_certificates: true
+
+# Can be docker_dns, host_resolvconf or none
+resolvconf_mode: none
 ```
 
 打开日志报错
@@ -162,8 +168,8 @@ ansible-inventory -i /inventory/inventory.ini --list
 
 #### 运行部署
 ```bash
-# 该命令可以成功， 但是要输入两次密码
-ansible-playbook -i /inventory/inventory.ini cluster.yml --user lzb --ask-pass --become --ask-become-pass
+# 要输入两次密码
+ansible-playbook -i /inventory/inventory.ini cluster.yml --user linuzb --ask-pass --become --ask-become-pass
 
 ```
 
@@ -171,7 +177,7 @@ ansible-playbook -i /inventory/inventory.ini cluster.yml --user lzb --ask-pass -
 
 ```bash
 ansible-playbook -i /inventory/inventory.ini scale.yml \
-  --user=lzb --ask-pass --become --ask-become-pass -b \
+  --user=linuzb --ask-pass --become --ask-become-pass -b \
    --limit=kube-node-114
 ```
 
@@ -191,13 +197,7 @@ ansible-playbook -i /inventory/inventory.ini scale.yml \
 ```sh
 ansible-playbook \
   -i inventory/mycluster/inventory.ini \
-  --private-key=id_rsa --user=ubuntu -b \
-  -e "node=node2,node3" \
-  remove-node.yml
-
-ansible-playbook \
-  -i inventory/mycluster/inventory.ini \
-  --user=lzb --ask-pass --become --ask-become-pass -b \
+  --user=linuzb --ask-pass --become --ask-become-pass -b \
   -e "node=kube-node-114" \
   remove-node.yml
 ```
@@ -218,11 +218,12 @@ alias k='kubectl --kubeconfig /home/linuzb/Projects/kube-cert/kubeconfig'
 
 - [Installing the NVIDIA Container Toolkit — NVIDIA Container Toolkit 1.14.5 documentation](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#configuring-docker)
 - [NVIDIA/nvidia-container-toolkit: Build and run containers leveraging NVIDIA GPUs (github.com)](https://github.com/NVIDIA/nvidia-container-toolkit)
-[[linux 开发环境#GPU#安装 nvidia-device-plugin]]
 
-# debug
+## debug
 
-## dns
+### 网络排查
+
+#### dns 问题排查
 [Debugging DNS Resolution | Kubernetes](https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/)
 
 ```yaml
@@ -243,7 +244,7 @@ spec:
   restartPolicy: Always
 ```
 
-## 网络排查
+#### apiserver 连通性
 
 ```bash
 KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
@@ -254,9 +255,8 @@ curl -vvsSk -H "Authorization: Bearer $KUBE_TOKEN" https://$KUBERNETES_SERVICE_H
 curl -sSk -H "Authorization: Bearer $KUBE_TOKEN" https://172.16.0.100:6443/api/v1/namespaces/jhub/pods
 ```
 
-## 网络排查
 
-### nodelocaldns
+#### nodelocaldns
 
 kubernetes 节点重启后，nodelocaldns crash
 
@@ -270,3 +270,9 @@ kubernetes 节点重启后，nodelocaldns crash
 > 1. Change settings in k8 config file for kubespray. I changed 2 things: `resolvconf_mode: none` and `remove_default_searchdomains: false`
 
 然后使用 kubespray 重新部署 kubernetes
+
+## 参考文档
+- [使用Kubespray 部署Kubernetes集群 | Sunday博客 | Sunday Blog (sundayhk.com)](https://www.sundayhk.com/post/kubespray/)
+- [使用kubespray安装kubernetes | kubernetes-notes (huweihuang.com)](https://k8s.huweihuang.com/project/setup/installer/install-k8s-by-kubespray)
+
+也可参考其它方式 [easzlab/kubeasz: 使用Ansible脚本安装K8S集群](https://github.com/easzlab/kubeasz)
