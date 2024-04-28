@@ -1,16 +1,18 @@
 ---
-title: "Kubespray_deploy_k8s"
+title: "Kubespray deploy k8s"
 date: 2024-04-28T10:06:36+08:00
 draft: false
 
 tags:
-- kubernetes
-- kubespray
+- Kubernetes
+- Kubespray
 
 categories: 
 - Cloud Native
+
 authors:
 - "linuzb"
+
 ---
 
 # 部署
