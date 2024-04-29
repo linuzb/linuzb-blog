@@ -132,3 +132,13 @@ kubectl -n kube-system describe pod-name
 #### 命令文档
 
 参考 [helm command](https://helm.sh/docs/helm/helm/)
+
+## 用户文档
+
+### 用户手册
+
+查看 [Jupyterhub Userguide ]({{< ref "jupyterhub-userguide" >}})
+
+### docker 镜像制作
+
+TODO：
