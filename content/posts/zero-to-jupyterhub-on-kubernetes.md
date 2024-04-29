@@ -139,8 +139,8 @@ kubectl -n kube-system describe pod-name
 
 查看 [Jupyterhub Userguide ]({{< ref "jupyterhub-userguide" >}})
 
-### docker 镜像制作
+### 镜像制作
 
-TODO：
+查看 [Docker 入门文档]({{< ref "docker-doc" >}})
 
 ### github action 自动构建镜像
