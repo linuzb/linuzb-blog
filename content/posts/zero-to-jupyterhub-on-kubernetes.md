@@ -142,3 +142,5 @@ kubectl -n kube-system describe pod-name
 ### docker 镜像制作
 
 TODO：
+
+### github action 自动构建镜像
