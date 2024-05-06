@@ -2,6 +2,21 @@
 title: "从零开始在Kubernetes上搭建Jupyterhub"
 date: 2024-04-29T15:08:47+08:00
 draft: false
+
+tags:
+- Kubernetes
+- Jupyterhub
+- Jupyter
+- Docker
+- Container
+- Github Action
+
+categories: 
+- Cloud Native
+
+authors:
+- "linuzb"
+
 ---
 
 ## 前言
@@ -142,5 +157,23 @@ kubectl -n kube-system describe pod-name
 ### 镜像制作
 
 查看 [Docker 入门文档]({{< ref "docker-doc" >}})
+
+#### 如何制作 jupyter docker 镜像
+
+前面我们介绍了如何介绍 docker 镜像。是不是所有的 docker 镜像都可以作为应用运行在 jupyterhub on kubernetes 上呢？答案是否定的，我们还需要做一些工作，例如安装 jupyter、增加用户、启动参数等。
+
+以上工作，jupyter 官方已经提供了封装好的应用，例如 jupyter pytorch、jupyter tensorflow 等镜像。并且提供了 dockerfile 我们可以参考这些 Dockerfile 自定义我们自己的应用。Dockerfile 参考 [jupyter/docker-stacks/images](https://github.com/jupyter/docker-stacks/tree/main/images)
+
+有些时候，我们只是希望在 [jupyter/docker-stacks/images](https://github.com/jupyter/docker-stacks/tree/main/images) 的基础上添加一些软件，我们只需要将 [jupyter/docker-stacks/images](https://github.com/jupyter/docker-stacks/tree/main/images) 作为我们 Dockerfile 的基础镜像即可。jupyter/docker-stacks/image 仓库已经打包好了 jupyter 镜像，地址为 [quay.io/organization/jupyter](https://quay.io/organization/jupyter)，在新的 Dockerfile 中可以 FROM 这些镜像。
+
+例如：
+```Dockerfile
+FROM quay.io/jupyter/pytorch-notebook
+
+RUN apt-get update --yes \
+    && apt-get install --yes --no-install-recommends \
+    git \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+```
 
 ### github action 自动构建镜像
