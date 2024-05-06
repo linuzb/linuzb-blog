@@ -176,3 +176,5 @@ RUN apt-get update --yes \
 ```
 
 ### github action 自动构建镜像
+
+参考 [github action 简明教程]({{< ref "github-action-guide" >}})

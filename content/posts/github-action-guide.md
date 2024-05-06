@@ -44,6 +44,10 @@ GitHub Actions 主要有以下几个概念
 
 ## 快速入门
 
+本文是一个入门教程，仅起到抛砖引玉的作用，详细概念介绍和使用方法以可见参考文档或者自行搜索。
+
+这里介绍一些例子快速上手。
+
 ### 自动构建 docker 镜像并推送到 dockerhub
 
 #### 准备
@@ -54,6 +58,48 @@ GitHub Actions 主要有以下几个概念
 - 添加 Actions 配置文件，这个文件定义了如何使用以上的 Dockerfile 构建镜像
 
 #### Dockerfile
+
+```dockerfile
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+ARG REGISTRY=quay.io
+ARG OWNER=jupyter
+ARG BASE_CONTAINER=$REGISTRY/$OWNER/scipy-notebook
+FROM $BASE_CONTAINER
+
+LABEL maintainer="Jupyter Project <jupyter@googlegroups.com>"
+
+# Fix: https://github.com/hadolint/hadolint/wiki/DL4006
+# Fix: https://github.com/koalaman/shellcheck/wiki/SC3014
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+USER root
+
+RUN apt-get update --yes \
+    && apt-get install --yes --no-install-recommends \
+    wget \
+    curl \
+    vim \
+    git \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Installation de Code Server et server-proxy/vscode-proxy pour intégrer Code dans JupyterLab
+# Install VSCode extensions
+ENV CODE_VERSION=4.22.1
+RUN curl -fOL https://github.com/coder/code-server/releases/download/v$CODE_VERSION/code-server_${CODE_VERSION}_amd64.deb && \
+    dpkg -i code-server_${CODE_VERSION}_amd64.deb && \
+    rm -f code-server_${CODE_VERSION}_amd64.deb && \
+    EXT_LIST="ms-python.python ms-python.debugpy zhuangtongfa.material-theme" && \
+    for EXT in $EXT_LIST; do code-server --install-extension $EXT; done
+
+USER ${NB_UID}
+
+# https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/docker-specialized.html#dockerfiles
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+```
+
+如何编写 Dockerfile 可以参考 [docker 教程]({{< ref "docker-doc" >}})
 
 #### github action 配置
 
@@ -126,3 +172,9 @@ jobs:
 - [SSH 连接到 GitHub Actions 虚拟服务器(VM/VPS)](https://p3terx.com/archives/ssh-to-the-github-actions-virtual-server-environment.html)
 
 ## 参考
+
+- 示例项目 [linuzb/devcontainer](https://github.com/linuzb/devcontainer)
+- [GitHub Actions 快速入门](https://docs.github.com/zh/actions/quickstart)
+- [了解 GitHub Actions](https://docs.github.com/zh/actions/learn-github-actions/understanding-github-actions?learn=getting_started&learnProduct=actions)
+- [阮一峰|GitHub Actions 入门教程](https://www.ruanyifeng.com/blog/2019/09/getting-started-with-github-actions.html)
+- [Publish a Docker image on DockerHub with GitHub Actions](https://blog.pradumnasaraf.dev/dockerhub-githubactions)
