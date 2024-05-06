@@ -2,6 +2,17 @@
 title: "Kubernetes Nfs Provider"
 date: 2024-04-29T10:47:07+08:00
 draft: false
+
+tags:
+- Kubernetes
+- NFS
+- CSI
+
+categories: 
+- Cloud Native
+
+authors:
+- "linuzb"
 ---
 
 
