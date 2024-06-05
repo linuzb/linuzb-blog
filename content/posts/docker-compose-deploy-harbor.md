@@ -19,7 +19,7 @@ authors:
 首先到官方 release 页面查找对应的版本号，使用以下命令下载
 
 ```shell
-export HARBOR_VERSION=v2.9.4
+export HARBOR_VERSION=2.9.4
 wget https://github.com/goharbor/harbor/releases/download/v${HARBOR_VERSION}/harbor-offline-installer-v${HARBOR_VERSION}.tgz
 tar xvf harbor-offline-installer-v${HARBOR_VERSION}.tgz
 cd harbor
