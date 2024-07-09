@@ -64,22 +64,22 @@ HTTP_PORT=18080
 
 #### 创建应用
 
-##### 基础配置
+**基础配置**
 
 应用名称：frps
 镜像源：snowdreamtech/frps
 
-##### 网络配置
+**网络配置**
 
 | 容器暴露端口 | 开启公网访问 | 备注                                         |
 | ------ | ------ | ------------------------------------------ |
-| 7000   | 关闭     | 由于 ingress 无法开启 tcp 转发，接下来我们将创建一个 nodePort |
+| 7000   | 关闭     | 由于 ingress 无法开启 tcp 转发，接下来我们将创建一个 nodePort Service |
 | 7080   | 开启     | 使用 https 协议，用于代理 jumpserver http 服务        |
 
-##### 高级配置
+**高级配置**
 
 配置文件名： /etc/frp/frps.toml
-配置文件：
+配置文件内容：
 
 ```yaml
 bindPort = 7000
@@ -111,6 +111,12 @@ spec:
     app: frps
   sessionAffinity: None
   type: NodePort
+```
+
+接下来创建 service
+
+```
+kubectl apply -f svc.yaml
 ```
 
 这个 service 只暴露 7000 端口。
