@@ -40,7 +40,8 @@ cp -rfp inventory/sample inventory/mycluster
 
 ####  inventory
 
-inventory.ini
+inventory/mycluster/inventory.ini
+
 ```ini
 # ## Configure 'ip' variable to bind kubernetes services on a
 # ## different ip than the default iface
@@ -103,7 +104,7 @@ inventory/mycluster/group_vars/all/containerd.yml
 # containerd_state_dir: "/run/containerd"
 ```
 
-配置容器registry
+配置容器registry(暂不配置，使用 dragonfly)
 
 inventory/mycluster/group_vars/all/containerd.yml
 ```yaml
@@ -167,10 +168,10 @@ ansible-inventory -i /inventory/inventory.ini --list
 ```
 
 #### 运行部署
+
 ```bash
 # 要输入两次密码
-ansible-playbook -i /inventory/inventory.ini cluster.yml --user linuzb --ask-pass --become --ask-become-pass
-
+ansible-playbook -i /inventory/inventory.ini cluster.yml --user k8s --ask-pass --become --ask-become-pass
 ```
 
 #### 扩容节点
